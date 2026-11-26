@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# LoRA / model weights — distribute via GitHub Releases, not Git
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.onnx
+
+# Training outputs and logs
+outputs/
+logs/
+runs/
+wandb/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
