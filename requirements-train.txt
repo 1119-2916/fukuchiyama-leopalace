@@ -1,0 +1,16 @@
+# Training-machine dependencies for the in-repo MOSS trainer
+# (scripts/train/train_moss_lora.py). Anima uses sd-scripts' own
+# environment and Z-Image / FLUX.3 use AI Toolkit's; install those from
+# their repos instead (docs/quickstart.md).
+#
+# IMPORTANT (Blackwell): install a PyTorch build with Blackwell (sm_120)
+# support first, following the current official selector for your CUDA
+# version, e.g.:
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+# The unpinned line below assumes torch is already satisfied.
+torch
+diffusers
+transformers
+peft
+accelerate
+Pillow>=10

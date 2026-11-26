@@ -22,23 +22,31 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 .
 ├── README.md          # このファイル
 ├── docs/
-│   ├── dataset.md     # データセットの仕様・キャプション方針
-│   ├── captioning.md  # Vision LLM によるキャプション生成フロー
-│   ├── base-models.md # 対象ベースモデル 4 種の注意点と比較
-│   └── training.md    # 学習環境・手順・記録の取り方
+│   ├── quickstart.md    # クローンから学習までの全手順（最初に読む）
+│   ├── dataset.md       # データセットの仕様・キャプション方針
+│   ├── captioning.md    # Vision LLM によるキャプション生成フロー
+│   ├── normalization.md # 画像の正規化（調査結果と方針）
+│   ├── preprocessing.md # モデル別の画像前処理
+│   ├── base-models.md   # 対象ベースモデル 4 種の注意点と比較
+│   └── training.md      # 学習のモデル別ランブック・記録の取り方
 ├── scripts/
-│   ├── caption_batch.py  # キャプション一括生成（Python 標準ライブラリのみ）
-│   └── caption_batch.sh  # そのラッパー
-├── prompts/
-│   └── caption_default.txt  # キャプション生成プロンプト
-├── tests/
-│   └── test_caption_batch.py  # mock プロバイダによる単体テスト
+│   ├── preflight.py        # 学習マシンの前提条件チェック
+│   ├── caption_batch.py    # キャプション一括生成（標準ライブラリのみ）
+│   ├── normalize_images.py # 画像の衛生処理（要 Pillow）
+│   ├── preprocess_images.py# モデル別の幾何前処理（要 Pillow）
+│   ├── assemble_training.py# 学習用フォルダの組み立て
+│   └── train/              # モデル別 学習起動スクリプト + Moss 用学習本体
+├── prompts/             # キャプション生成プロンプト（モデル別）
+├── tests/               # 単体テスト・設定ガード
 ├── dataset/
-│   └── README.md      # 画像とキャプションの置き方
+│   └── README.md        # 画像の置き方
 └── configs/
-    ├── README.md      # 学習設定ファイルの置き場（モデルごとに分ける）
+    ├── README.md        # 学習設定ファイルの置き場（モデルごとに分ける）
     ├── anima/  ├── moss/  ├── z-image/  └── flux-klein/
 ```
+
+実作業の手順は [docs/quickstart.md](docs/quickstart.md) に一本化してある。
+前提が揃っているかは `python3 scripts/preflight.py` で確認できる。
 
 ## ワークフロー
 

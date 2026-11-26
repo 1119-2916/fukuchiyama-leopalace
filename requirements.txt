@@ -1,0 +1,6 @@
+# In-repo tooling dependencies.
+# caption_batch.py / assemble_training.py / preflight.py are stdlib-only;
+# the image tools need Pillow.
+Pillow>=10
+# Only for tests/test_train_configs.py (config guards).
+PyYAML>=6
