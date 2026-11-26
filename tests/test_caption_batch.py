@@ -92,25 +92,36 @@ class DotEnvTests(unittest.TestCase):
 
 class PresetTests(unittest.TestCase):
     def test_resolve_target_presets(self):
+        self.assertEqual(cb.resolve_target("anima", None, None), ("tags", "en", None))
         self.assertEqual(
-            cb.resolve_target("anima", None, None, None),
-            ("tags", "en", None, "dataset-captions/anima"),
+            cb.resolve_target("moss", None, None), ("long", "en", "caption_moss.txt")
         )
-        style, lang, prompt_file, out = cb.resolve_target("moss", None, None, None)
-        self.assertEqual((style, lang, prompt_file), ("long", "en", "caption_moss.txt"))
-        self.assertEqual(out, "dataset-captions/moss")
-        self.assertEqual(cb.resolve_target("z-image", None, None, None)[0], "detailed")
-        self.assertEqual(cb.resolve_target("flux-klein", None, None, None)[0], "detailed")
+        self.assertEqual(cb.resolve_target("z-image", None, None)[0], "detailed")
+        self.assertEqual(cb.resolve_target("flux-klein", None, None)[0], "detailed")
 
     def test_explicit_options_win_over_preset(self):
-        style, _, _, out = cb.resolve_target("moss", "tags", None, "custom/dir")
-        self.assertEqual(style, "tags")
-        self.assertEqual(out, "custom/dir")
+        self.assertEqual(cb.resolve_target("moss", "tags", None)[0], "tags")
 
     def test_no_target_keeps_defaults(self):
+        self.assertEqual(cb.resolve_target(None, None, None), ("tags", "en", None))
+
+    def test_run_id_format(self):
+        from datetime import datetime
+
         self.assertEqual(
-            cb.resolve_target(None, None, None, None), ("tags", "en", None, None)
+            cb.make_run_id(datetime(2026, 11, 26, 17, 8, 40)), "20261126-170840"
         )
+
+    def test_build_output_dir_layout(self):
+        self.assertEqual(
+            cb.build_output_dir(None, "20261126-170840", "moss", "long", False),
+            Path("dataset-captions") / "20261126-170840" / "moss",
+        )
+        self.assertEqual(
+            cb.build_output_dir("caps", "run1", None, "tags", False),
+            Path("caps") / "run1" / "style-tags",
+        )
+        self.assertIsNone(cb.build_output_dir(None, "run1", "moss", "long", True))
 
     def test_sentence_trigger(self):
         self.assertEqual(
@@ -133,7 +144,8 @@ class MockBatchTests(unittest.TestCase):
             root = Path(tmp)
             make_image(root, "001.png")
             make_image(root, "002.png")
-            argv = [str(root), "--provider", "mock", "--trigger-word", "mystyle"]
+            argv = [str(root), "--provider", "mock", "--trigger-word", "mystyle",
+                    "--in-place"]
             self.assertEqual(cb.main(argv), 0)
             self.assertTrue(
                 (root / "001.txt").read_text().startswith("mystyle, mock caption")
@@ -143,25 +155,35 @@ class MockBatchTests(unittest.TestCase):
             self.assertEqual(cb.main(argv), 0)
             self.assertEqual((root / "001.txt").read_text(), before)
 
-    def test_output_dir_keeps_images_clean(self):
+    def test_run_directory_layout_and_resume(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             images = root / "images"
             out = root / "caps"
             make_image(images, "001.png")
-            argv = [str(images), "--provider", "mock", "--output-dir", str(out)]
+            argv = [str(images), "--provider", "mock", "--output-dir", str(out),
+                    "--target-model", "moss", "--run-id", "20261126-170840"]
             self.assertEqual(cb.main(argv), 0)
-            self.assertTrue((out / "001.txt").exists())
+            caption = out / "20261126-170840" / "moss" / "001.txt"
+            self.assertTrue(caption.exists())
             self.assertFalse((images / "001.txt").exists())
+            # Re-running with the same run-id resumes into the same directory:
+            # the existing caption is left untouched.
+            before = caption.read_text()
+            self.assertEqual(cb.main(argv), 0)
+            self.assertEqual(caption.read_text(), before)
 
     def test_dry_run_writes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             make_image(root, "001.png")
             self.assertEqual(
-                cb.main([str(root), "--provider", "mock", "--dry-run"]), 0
+                cb.main([str(root), "--provider", "mock", "--dry-run",
+                         "--output-dir", str(root / "caps"),
+                         "--run-id", "run1"]), 0
             )
             self.assertFalse((root / "001.txt").exists())
+            self.assertFalse((root / "caps").exists())
 
 
 if __name__ == "__main__":

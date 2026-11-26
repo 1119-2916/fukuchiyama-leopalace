@@ -63,8 +63,35 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 ./scripts/caption_batch.sh --limit 5 --trigger-word okakikai
 ```
 
-生成された `dataset/*.txt` を目視確認し、必要なら
-`prompts/caption_default.txt` や `--style` を調整する。
+生成された `dataset-captions/<実行日時>/<モデル名>/*.txt` を目視確認し、
+必要なら `prompts/caption_default.txt` や `--style` を調整する。
+
+## 出力先の構造
+
+実行ごとに、生成物は「実行日時のディレクトリ → 対応モデル名の
+ディレクトリ」の下に分かれて保存される（入力フォルダの相対構造は
+その下で維持される）:
+
+```
+dataset-captions/
+  20261126-170840/        ← 実行日時 YYYYMMDD-HHMMSS（ローカル時刻）
+    moss/
+      001.txt             ← 入力画像 001.png に対応
+      002.txt
+  20261126-183015/
+    anima/
+      ...
+```
+
+- 既定のルートは `dataset-captions/`。`--output-dir`（別名 `--output-root`）
+  で変更できる
+- 日時ディレクトリ名は `--run-id` で固定できる。**同じ run-id で再実行
+  すると同じディレクトリに再開**され、生成済みキャプションは
+  スキップされる（日時が変わる通常の再実行は新規セットになる点に注意）
+- `--target-model` を付けない実行では、モデル名の位置は
+  `style-<形式名>` になる
+- 画像の隣に直接 `.txt` を置く旧形式が要る場合は `--in-place` を使う
+  （学習ツール用のフォルダを直接組み立てる時など）
 
 ### 3. 本番バッチ
 
@@ -90,7 +117,9 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 | `--delay SEC` | 0 | workers=1 のときのリクエスト間隔 |
 | `--prompt-file` | `prompts/caption_default.txt` | プロンプトテンプレートの差し替え |
 | `--log-file` | なし | 1 画像 1 行の JSON Lines で結果を追記 |
-| `--output-dir` | なし | キャプションの出力先を画像フォルダから分ける（相対構造を維持）。モデル別キャプション一式の作成用 |
+| `--output-dir` / `--output-root` | `dataset-captions` | 生成物のルート。実ファイルは `<ルート>/<実行日時>/<モデル名>/` に入る（下記「出力先の構造」） |
+| `--run-id` | 実行日時 | 実行ディレクトリ名。同じ値を再指定すると前回分に再開する |
+| `--in-place` | off | 実行ディレクトリを作らず、画像の隣に直接 `.txt` を書く（旧形式） |
 
 モデル別キャプションの作り分け（詳細: [base-models.md](base-models.md)）は
 `--target-model` プリセットで指定するのが正規の方法:
@@ -106,13 +135,13 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 
 | target | style | プロンプト | 出力先（既定） | トリガーワード付与 |
 |---|---|---|---|---|
-| anima | tags | caption_default.txt | dataset-captions/anima | `okakikai, ...`（タグ列の先頭） |
-| moss | long（5〜8文・逐語的、見える文字は正確に転記） | caption_moss.txt | dataset-captions/moss | `okakikai. ...`（独立した文として先頭） |
-| z-image | detailed（2〜3文） | caption_default.txt | dataset-captions/z-image | 同上 |
-| flux-klein | detailed（2〜3文） | caption_default.txt | dataset-captions/flux-klein | 同上 |
+| anima | tags | caption_default.txt | dataset-captions/<日時>/anima | `okakikai, ...`（タグ列の先頭） |
+| moss | long（5〜8文・逐語的、見える文字は正確に転記） | caption_moss.txt | dataset-captions/<日時>/moss | `okakikai. ...`（独立した文として先頭） |
+| z-image | detailed（2〜3文） | caption_default.txt | dataset-captions/<日時>/z-image | 同上 |
+| flux-klein | detailed（2〜3文） | caption_default.txt | dataset-captions/<日時>/flux-klein | 同上 |
 
-- `--style` / `--language` / `--prompt-file` / `--output-dir` を明示した
-  場合はそちらがプリセットより優先される
+- `--style` / `--language` / `--prompt-file` を明示した場合はそちらが
+  プリセットより優先される（`--output-dir` は出力ルートの変更として併用可）
 - Moss の `long` 形式ではトークン上限が自動で 800 に引き上がる
 - 自然文形式でトリガーワードをカンマで繋ぐと文が壊れるため、
   自然文系（natural / detailed / long）では独立文として付与する

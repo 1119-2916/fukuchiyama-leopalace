@@ -54,7 +54,7 @@ LoRA を作る対象として以下の 4 モデルを選定した。
 
 スクリプト側の対応（実装済み）: `caption_batch.py --target-model
 <anima|moss|z-image|flux-klein>` が、モデルごとの形式・プロンプト・
-出力先（`dataset-captions/<model>`）をプリセットとして適用する。
+出力先（`dataset-captions/<実行日時>/<model>`）をプリセットとして適用する。
 Moss 向けには `long` 形式（5〜8文の逐語的キャプション＋見える文字の
 正確な転記）と専用プロンプト `prompts/caption_moss.txt` を用意した。
 ただし Moss 公式レシピは画風の記述も求めるのに対し、本プロジェクトでは

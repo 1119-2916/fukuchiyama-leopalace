@@ -15,6 +15,10 @@ venv/
 *.bin
 *.onnx
 
+# Generated caption runs (regenerable; the adopted set is copied into
+# the training dataset folder instead)
+dataset-captions/
+
 # Training outputs and logs
 outputs/
 logs/

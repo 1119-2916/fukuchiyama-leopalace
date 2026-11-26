@@ -380,10 +380,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                              "(default: prompts/caption_default.txt next to the repo root, "
                              "falling back to a built-in prompt)")
     parser.add_argument("--target-model", choices=sorted(TARGET_PRESETS), default=None,
-                        help="Base model to caption for. Fills in --style, --language, "
-                             "--prompt-file and --output-dir (dataset-captions/<model>) "
-                             "from the preset in docs/base-models.md; explicitly given "
-                             "options win over the preset")
+                        help="Base model to caption for. Fills in --style, --language "
+                             "and --prompt-file from the preset in docs/base-models.md "
+                             "and names the output subdirectory after the model; "
+                             "explicitly given options win over the preset")
     parser.add_argument("--style", choices=sorted(STYLE_INSTRUCTIONS), default=None,
                         help="Caption style (default: tags, or the target model's preset)")
     parser.add_argument("--language", choices=("en", "ja"), default=None,
@@ -406,10 +406,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--no-recursive", action="store_true")
     parser.add_argument("--log-file", default=None,
                         help="Append per-image results as JSON Lines to this file")
-    parser.add_argument("--output-dir", default=None,
-                        help="Write captions under this directory instead of next to "
-                             "the images, mirroring the relative folder structure. "
-                             "Useful for per-base-model caption sets.")
+    parser.add_argument("--output-dir", "--output-root", dest="output_dir", default=None,
+                        help="Root directory for generated captions. The actual files "
+                             "go to <root>/<run datetime>/<target model>/, mirroring "
+                             "the input folder structure (default root: dataset-captions)")
+    parser.add_argument("--run-id", default=None,
+                        help="Name of the run directory under the output root "
+                             "(default: current local time as YYYYMMDD-HHMMSS). "
+                             "Reusing a previous run-id resumes into that same "
+                             "directory, skipping captions that already exist there")
+    parser.add_argument("--in-place", action="store_true",
+                        help="Write captions next to the images instead of into the "
+                             "run directory structure (previous behaviour, e.g. for "
+                             "assembling a trainer-ready dataset folder directly)")
     parser.add_argument("--env-file", default=".env",
                         help="Read settings from this .env file if it exists "
                              "(default: .env; existing environment variables win)")
@@ -451,19 +460,43 @@ def resolve_target(
     target_model: str | None,
     style: str | None,
     language: str | None,
-    output_dir: str | None,
-) -> tuple[str, str, str | None, str | None]:
+) -> tuple[str, str, str | None]:
     """Apply a target-model preset under explicitly given options.
 
-    Returns (style, language, preset_prompt_file, output_dir).
+    Returns (style, language, preset_prompt_file).
     """
     preset = TARGET_PRESETS.get(target_model or "", {})
     resolved_style = style or preset.get("style") or "tags"
     resolved_language = language or preset.get("language") or "en"
-    resolved_output = output_dir
-    if target_model and resolved_output is None:
-        resolved_output = f"dataset-captions/{target_model}"
-    return resolved_style, resolved_language, preset.get("prompt_file"), resolved_output
+    return resolved_style, resolved_language, preset.get("prompt_file")
+
+
+def make_run_id(now: "datetime | None" = None) -> str:
+    """Run directory name from the execution time: YYYYMMDD-HHMMSS (local)."""
+    from datetime import datetime
+
+    return (now or datetime.now()).strftime("%Y%m%d-%H%M%S")
+
+
+def build_output_dir(
+    output_root: str | None,
+    run_id: str,
+    target_model: str | None,
+    style: str,
+    in_place: bool,
+) -> Path | None:
+    """Where captions go.
+
+    Default layout: ``<root>/<run datetime>/<target model>/`` mirroring the
+    input folder structure below that. ``in_place`` returns None, which
+    means captions are written next to the images instead. Without a
+    target model, the model slot is named after the style.
+    """
+    if in_place:
+        return None
+    root = Path(output_root) if output_root else Path("dataset-captions")
+    model_slot = target_model or f"style-{style}"
+    return root / run_id / model_slot
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -483,8 +516,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: input directory not found: {input_dir}", file=sys.stderr)
         return 2
 
-    style, language, preset_prompt, resolved_output_dir = resolve_target(
-        args.target_model, args.style, args.language, args.output_dir
+    style, language, preset_prompt = resolve_target(
+        args.target_model, args.style, args.language
+    )
+    run_id = args.run_id or make_run_id()
+    effective_output_dir = build_output_dir(
+        args.output_dir, run_id, args.target_model, style, args.in_place
     )
     # Long captions (MOSS preset) do not fit in the default token budget.
     max_tokens = args.max_tokens
@@ -509,7 +546,7 @@ def main(argv: list[str] | None = None) -> int:
         load_prompt_template(args.prompt_file, preset_prompt), style, language
     )
     images = find_images(input_dir, recursive=not args.no_recursive)
-    output_dir = Path(resolved_output_dir) if resolved_output_dir else None
+    output_dir = effective_output_dir
 
     todo = [
         p for p in images
@@ -520,7 +557,8 @@ def main(argv: list[str] | None = None) -> int:
 
     print(f"images found: {len(images)}, to caption: {len(todo)}, "
           f"provider: {cfg.provider}, model: {cfg.model or '(mock)'}"
-          + (f", target: {args.target_model}, style: {style}" if args.target_model else ""))
+          + (f", target: {args.target_model}, style: {style}" if args.target_model else "")
+          + (f", output: {output_dir}" if output_dir else ", output: next to images"))
 
     def run_one(path: Path) -> Result:
         result = process_one(path, cfg, prompt, args.trigger_word,
