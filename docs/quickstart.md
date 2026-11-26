@@ -141,6 +141,23 @@ Moss のみ追加の事前確認: `scripts/train/train_moss_lora.py` 冒頭の
 ./scripts/train/train_moss.sh > outputs/moss/train.log 2>&1
 ```
 
+## 手順5.5: 評価生成（学習したモデルのみ）
+
+学習が完了したモデルは、固定評価セットでサンプル生成を行う
+（詳細: [generation.md](generation.md)）。これが手順6の学習記録の
+「サンプル所感」の根拠になる。
+
+```bash
+./scripts/generate.sh --target-model <モデル> --eval \
+    --lora outputs/<モデル>/<完成した重み>.safetensors \
+    --run-id "$RUN_ID"
+# -> generated/$RUN_ID/<モデル>/ に eval プロンプト6件分の画像
+```
+
+検証ゲート: `generated/$RUN_ID/<モデル>/generation_manifest.json`
+が存在し、画像が6枚あること。生成に失敗したモデルは、エラー内容を
+記録して手順6の報告に含める（学習自体の成否とは分けて扱う）。
+
 ## 手順6: 学習記録と最終報告
 
 モデルごとに `outputs/<モデル>/TRAINING_RECORD.md` を作り、

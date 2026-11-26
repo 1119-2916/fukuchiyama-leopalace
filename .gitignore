@@ -31,6 +31,9 @@ dataset-normalized/
 # any time with preprocess_images.py)
 dataset-preprocessed/
 
+# Generated sample images (regenerable from a LoRA + manifest)
+generated/
+
 # Training outputs and logs
 outputs/
 logs/

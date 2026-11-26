@@ -28,7 +28,8 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 │   ├── normalization.md # 画像の正規化（調査結果と方針）
 │   ├── preprocessing.md # モデル別の画像前処理
 │   ├── base-models.md   # 対象ベースモデル 4 種の注意点と比較
-│   └── training.md      # 学習のモデル別ランブック・記録の取り方
+│   ├── training.md      # 学習のモデル別ランブック・記録の取り方
+│   └── generation.md    # LoRA を使った画像生成・評価生成
 ├── scripts/
 │   ├── preflight.py        # 学習マシンの前提条件チェック
 │   ├── caption_batch.py    # キャプション一括生成（標準ライブラリのみ）

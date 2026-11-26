@@ -1,0 +1,21 @@
+# Fixed evaluation prompts for LoRA checkpoint comparison.
+# Used by scripts/generate.py --eval. Seeds are fixed (1000 + index),
+# so the same prompt+seed grid is produced for every checkpoint/model.
+# Do not edit casually: changing this file breaks comparability with
+# past evaluations. Anima uses [tags]; the other models use [natural].
+
+[tags]
+okakikai, 1girl, solo, long silver hair, red ribbon, white dress, standing, garden, flowers, smile
+okakikai, 1girl, solo, short pink hair, school uniform, sitting, classroom, window, holding a book
+okakikai, 1girl, solo, blonde hair, beret, white sweater, upper body, cafe, holding a cup, looking at viewer
+okakikai, 2girls, black hair, purple hair, ponytail, casual clothes, walking, shopping street, carrying bags
+okakikai, 1girl, solo, brown hair, twintails, apron, kitchen, cooking, holding a frying pan, steam
+okakikai, chibi, 1girl, solo, pink hair, pajamas, sitting on a bed, hugging a plush toy, night, moon window
+
+[natural]
+okakikai. A girl with long silver hair and a red ribbon, wearing a white dress, standing in a garden full of flowers and smiling.
+okakikai. A girl with short pink hair in a school uniform, sitting in a classroom by the window and holding a book.
+okakikai. A blonde girl wearing a white beret and a white sweater, seen from the waist up in a cafe, holding a cup and looking at the viewer.
+okakikai. Two girls, one with black hair and one with a purple ponytail, in casual clothes, walking down a shopping street carrying bags.
+okakikai. A girl with brown twintails wearing an apron, cooking in a kitchen and holding a frying pan with steam rising from it.
+okakikai. A chibi girl with pink hair in pajamas, sitting on a bed at night and hugging a plush toy, with the moon visible through the window.
