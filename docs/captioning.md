@@ -60,7 +60,7 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 いきなり全件回さず、数枚でキャプションの質を確認する。
 
 ```bash
-./scripts/caption_batch.sh --limit 5 --trigger-word <トリガーワード>
+./scripts/caption_batch.sh --limit 5 --trigger-word okakikai
 ```
 
 生成された `dataset/*.txt` を目視確認し、必要なら
@@ -69,7 +69,7 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 ### 3. 本番バッチ
 
 ```bash
-./scripts/caption_batch.sh --trigger-word <トリガーワード> \
+./scripts/caption_batch.sh --trigger-word okakikai \
     --log-file caption_run.jsonl
 ```
 

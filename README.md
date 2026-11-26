@@ -73,7 +73,7 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 - [x] 対象ベースモデル: Anima / Moss（MOSS-Image）/ Z-Image / Flux-Klein
       （詳細: [docs/base-models.md](docs/base-models.md)）
 - [x] Flux-Klein の世代: FLUX.3 Image Klein Base（5.6B、Kommunity License）
-- [ ] トリガーワード（概念は [docs/dataset.md](docs/dataset.md) 参照）
+- [x] トリガーワード: `okakikai`（全モデル共通、2026-11-26 決定）
 - [x] データセット画像自体の公開: 公開する（2026-11-26 決定）
 - [x] 学習済み重みのライセンス: CC BY-NC 4.0（商用利用は全面不可）
       → [LICENSE-LORA.md](LICENSE-LORA.md)
