@@ -90,6 +90,43 @@ class DotEnvTests(unittest.TestCase):
                 os.environ.pop("CAPTION_TEST_KEEP", None)
 
 
+class PresetTests(unittest.TestCase):
+    def test_resolve_target_presets(self):
+        self.assertEqual(
+            cb.resolve_target("anima", None, None, None),
+            ("tags", "en", None, "dataset-captions/anima"),
+        )
+        style, lang, prompt_file, out = cb.resolve_target("moss", None, None, None)
+        self.assertEqual((style, lang, prompt_file), ("long", "en", "caption_moss.txt"))
+        self.assertEqual(out, "dataset-captions/moss")
+        self.assertEqual(cb.resolve_target("z-image", None, None, None)[0], "detailed")
+        self.assertEqual(cb.resolve_target("flux-klein", None, None, None)[0], "detailed")
+
+    def test_explicit_options_win_over_preset(self):
+        style, _, _, out = cb.resolve_target("moss", "tags", None, "custom/dir")
+        self.assertEqual(style, "tags")
+        self.assertEqual(out, "custom/dir")
+
+    def test_no_target_keeps_defaults(self):
+        self.assertEqual(
+            cb.resolve_target(None, None, None, None), ("tags", "en", None, None)
+        )
+
+    def test_sentence_trigger(self):
+        self.assertEqual(
+            cb.apply_trigger_word("A girl sits.", "okakikai", sentence=True),
+            "okakikai. A girl sits.",
+        )
+        self.assertEqual(
+            cb.apply_trigger_word("okakikai. A girl sits.", "okakikai", sentence=True),
+            "okakikai. A girl sits.",
+        )
+
+    def test_long_style_prompt_builds(self):
+        prompt = cb.build_prompt("{style_instruction} {language_instruction}", "long", "en")
+        self.assertIn("Transcribe any text", prompt)
+
+
 class MockBatchTests(unittest.TestCase):
     def test_end_to_end_and_resume(self):
         with tempfile.TemporaryDirectory() as tmp:

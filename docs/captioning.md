@@ -92,14 +92,30 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 | `--log-file` | なし | 1 画像 1 行の JSON Lines で結果を追記 |
 | `--output-dir` | なし | キャプションの出力先を画像フォルダから分ける（相対構造を維持）。モデル別キャプション一式の作成用 |
 
-モデル別キャプションの作り分け（詳細: [base-models.md](base-models.md)）:
+モデル別キャプションの作り分け（詳細: [base-models.md](base-models.md)）は
+`--target-model` プリセットで指定するのが正規の方法:
 
 ```bash
-# Anima 向け: タグ形式
-./scripts/caption_batch.sh --style tags     --output-dir dataset-captions/anima
-# Moss / Z-Image / Flux-Klein 向け: 自然文・詳細
-./scripts/caption_batch.sh --style detailed --output-dir dataset-captions/natural
+./scripts/caption_batch.sh --target-model anima      # tags 形式
+./scripts/caption_batch.sh --target-model moss       # long 形式 + 専用プロンプト
+./scripts/caption_batch.sh --target-model z-image    # detailed 自然文
+./scripts/caption_batch.sh --target-model flux-klein # detailed 自然文
 ```
+
+プリセットの内容:
+
+| target | style | プロンプト | 出力先（既定） | トリガーワード付与 |
+|---|---|---|---|---|
+| anima | tags | caption_default.txt | dataset-captions/anima | `okakikai, ...`（タグ列の先頭） |
+| moss | long（5〜8文・逐語的、見える文字は正確に転記） | caption_moss.txt | dataset-captions/moss | `okakikai. ...`（独立した文として先頭） |
+| z-image | detailed（2〜3文） | caption_default.txt | dataset-captions/z-image | 同上 |
+| flux-klein | detailed（2〜3文） | caption_default.txt | dataset-captions/flux-klein | 同上 |
+
+- `--style` / `--language` / `--prompt-file` / `--output-dir` を明示した
+  場合はそちらがプリセットより優先される
+- Moss の `long` 形式ではトークン上限が自動で 800 に引き上がる
+- 自然文形式でトリガーワードをカンマで繋ぐと文が壊れるため、
+  自然文系（natural / detailed / long）では独立文として付与する
 
 ## プロンプトの設計方針
 

@@ -53,7 +53,30 @@ STYLE_INSTRUCTIONS = {
         "Write the caption as 2-3 natural descriptive sentences covering the "
         "subject, appearance, action, objects, and background in detail."
     ),
+    "long": (
+        "Write a long, literal caption of 5-8 sentences. Start with the "
+        "composition and framing, then describe the subject, appearance, "
+        "expression, pose, clothing and objects in detail, then the "
+        "background and the colors of each element. Transcribe any text "
+        "visible in the image exactly, in quotation marks, without "
+        "translating or normalizing it."
+    ),
 }
+
+# Per-base-model captioning presets, matching docs/base-models.md.
+# Anima is trained on Danbooru tags; the other three are trained on
+# natural-language captions (MOSS-Image on long literal ones, with exact
+# transcription of visible text). The preset only fills in values the
+# user did not set explicitly.
+TARGET_PRESETS = {
+    "anima": {"style": "tags", "language": "en", "prompt_file": None},
+    "moss": {"style": "long", "language": "en", "prompt_file": "caption_moss.txt"},
+    "z-image": {"style": "detailed", "language": "en", "prompt_file": None},
+    "flux-klein": {"style": "detailed", "language": "en", "prompt_file": None},
+}
+
+# Styles whose captions are sentences rather than comma-separated tags.
+SENTENCE_STYLES = {"natural", "detailed", "long"}
 
 DEFAULT_BASE_URLS = {
     "openai-compatible": "https://api.openai.com/v1",
@@ -114,17 +137,26 @@ def clean_caption(raw: str) -> str:
     return text
 
 
-def apply_trigger_word(caption: str, trigger_word: str | None) -> str:
-    """Prepend the trigger word unless it is already the first token."""
+def apply_trigger_word(
+    caption: str, trigger_word: str | None, sentence: bool = False
+) -> str:
+    """Prepend the trigger word unless it is already at the start.
+
+    Tag captions get ``trigger, ...``. Sentence captions get the trigger
+    as its own leading sentence (``trigger. A girl ...``), because a
+    comma-joined prefix would corrupt the sentence the model produced.
+    """
     if not trigger_word:
         return caption
     trigger = trigger_word.strip()
     if not trigger:
         return caption
-    first = caption.split(",", 1)[0].strip().lower()
-    if first == trigger.lower():
+    head = caption.replace(".", ",", 1).split(",", 1)[0].strip().lower()
+    if head == trigger.lower():
         return caption
-    return f"{trigger}, {caption}" if caption else trigger
+    if not caption:
+        return trigger
+    return f"{trigger}. {caption}" if sentence else f"{trigger}, {caption}"
 
 
 def build_prompt(template: str, style: str, language: str) -> str:
@@ -284,6 +316,7 @@ def process_one(
     dry_run: bool,
     input_dir: Path | None = None,
     output_dir: Path | None = None,
+    sentence_trigger: bool = False,
 ) -> Result:
     caption_path = caption_path_for(image_path, input_dir, output_dir)
     if caption_path.exists() and not overwrite:
@@ -292,7 +325,9 @@ def process_one(
         return Result(str(image_path), "dry-run", str(caption_path))
     try:
         raw = generate_caption(cfg, image_path, prompt)
-        caption = apply_trigger_word(clean_caption(raw), trigger_word)
+        caption = apply_trigger_word(
+            clean_caption(raw), trigger_word, sentence=sentence_trigger
+        )
         if not caption:
             raise RuntimeError("model returned an empty caption")
         # Write atomically so a crash never leaves a half-written caption.
@@ -344,10 +379,15 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                              "{language_instruction} placeholders "
                              "(default: prompts/caption_default.txt next to the repo root, "
                              "falling back to a built-in prompt)")
-    parser.add_argument("--style", choices=sorted(STYLE_INSTRUCTIONS), default="tags",
-                        help="Caption style (default: tags)")
-    parser.add_argument("--language", choices=("en", "ja"), default="en",
-                        help="Caption language (default: en)")
+    parser.add_argument("--target-model", choices=sorted(TARGET_PRESETS), default=None,
+                        help="Base model to caption for. Fills in --style, --language, "
+                             "--prompt-file and --output-dir (dataset-captions/<model>) "
+                             "from the preset in docs/base-models.md; explicitly given "
+                             "options win over the preset")
+    parser.add_argument("--style", choices=sorted(STYLE_INSTRUCTIONS), default=None,
+                        help="Caption style (default: tags, or the target model's preset)")
+    parser.add_argument("--language", choices=("en", "ja"), default=None,
+                        help="Caption language (default: en, or the target model's preset)")
     parser.add_argument("--trigger-word", default=os.environ.get("CAPTION_TRIGGER_WORD"),
                         help="Trigger word prepended to every caption (env: CAPTION_TRIGGER_WORD)")
     parser.add_argument("--overwrite", action="store_true",
@@ -395,13 +435,35 @@ Rules:
 """
 
 
-def load_prompt_template(prompt_file: str | None) -> str:
+def load_prompt_template(prompt_file: str | None, preset_prompt: str | None = None) -> str:
+    prompts_dir = Path(__file__).resolve().parent.parent / "prompts"
     if prompt_file:
         return Path(prompt_file).read_text(encoding="utf-8")
-    default = Path(__file__).resolve().parent.parent / "prompts" / "caption_default.txt"
+    if preset_prompt and (prompts_dir / preset_prompt).exists():
+        return (prompts_dir / preset_prompt).read_text(encoding="utf-8")
+    default = prompts_dir / "caption_default.txt"
     if default.exists():
         return default.read_text(encoding="utf-8")
     return BUILTIN_PROMPT
+
+
+def resolve_target(
+    target_model: str | None,
+    style: str | None,
+    language: str | None,
+    output_dir: str | None,
+) -> tuple[str, str, str | None, str | None]:
+    """Apply a target-model preset under explicitly given options.
+
+    Returns (style, language, preset_prompt_file, output_dir).
+    """
+    preset = TARGET_PRESETS.get(target_model or "", {})
+    resolved_style = style or preset.get("style") or "tags"
+    resolved_language = language or preset.get("language") or "en"
+    resolved_output = output_dir
+    if target_model and resolved_output is None:
+        resolved_output = f"dataset-captions/{target_model}"
+    return resolved_style, resolved_language, preset.get("prompt_file"), resolved_output
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -421,13 +483,21 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: input directory not found: {input_dir}", file=sys.stderr)
         return 2
 
+    style, language, preset_prompt, resolved_output_dir = resolve_target(
+        args.target_model, args.style, args.language, args.output_dir
+    )
+    # Long captions (MOSS preset) do not fit in the default token budget.
+    max_tokens = args.max_tokens
+    if style == "long" and max_tokens < 800:
+        max_tokens = 800
+
     api_key_env = args.api_key_env or DEFAULT_API_KEY_ENVS.get(args.provider, "")
     cfg = ProviderConfig(
         provider=args.provider,
         model=args.model or DEFAULT_MODELS.get(args.provider, ""),
         base_url=args.base_url or DEFAULT_BASE_URLS.get(args.provider, ""),
         api_key=os.environ.get(api_key_env) if api_key_env else None,
-        max_tokens=args.max_tokens,
+        max_tokens=max_tokens,
         timeout=args.timeout,
         retries=args.retries,
     )
@@ -435,9 +505,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: set {api_key_env} for the anthropic provider", file=sys.stderr)
         return 2
 
-    prompt = build_prompt(load_prompt_template(args.prompt_file), args.style, args.language)
+    prompt = build_prompt(
+        load_prompt_template(args.prompt_file, preset_prompt), style, language
+    )
     images = find_images(input_dir, recursive=not args.no_recursive)
-    output_dir = Path(args.output_dir) if args.output_dir else None
+    output_dir = Path(resolved_output_dir) if resolved_output_dir else None
 
     todo = [
         p for p in images
@@ -447,12 +519,14 @@ def main(argv: list[str] | None = None) -> int:
         todo = todo[: args.limit]
 
     print(f"images found: {len(images)}, to caption: {len(todo)}, "
-          f"provider: {cfg.provider}, model: {cfg.model or '(mock)'}")
+          f"provider: {cfg.provider}, model: {cfg.model or '(mock)'}"
+          + (f", target: {args.target_model}, style: {style}" if args.target_model else ""))
 
     def run_one(path: Path) -> Result:
         result = process_one(path, cfg, prompt, args.trigger_word,
                              args.overwrite, args.dry_run,
-                             input_dir=input_dir, output_dir=output_dir)
+                             input_dir=input_dir, output_dir=output_dir,
+                             sentence_trigger=style in SENTENCE_STYLES)
         if args.delay and args.workers == 1 and result.status == "captioned":
             time.sleep(args.delay)
         return result

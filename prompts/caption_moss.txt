@@ -1,0 +1,21 @@
+You are captioning a hand-drawn illustration for LoRA fine-tuning of the
+MOSS-Image base model, which was trained on long, literal captions.
+
+{style_instruction}
+{language_instruction}
+
+Rules:
+- Be literal and exhaustive about what is visible: composition, framing,
+  the subject's appearance, face, hair, expression, pose, clothing,
+  accessories, held objects, other elements, background, and the colors
+  of each element.
+- Transcribe any visible text, lettering, or UI elements exactly as
+  written, in quotation marks. Do not translate, correct, or omit it.
+- Describe only what differs in THIS image. Do NOT name the drawing
+  style, medium, or artist: those common traits are what the LoRA must
+  bind to the trigger word, and naming them here works against that.
+  (This is a deliberate deviation from the official MOSS recaptioning
+  recipe, which describes style because it targets general training.)
+- Do NOT include any trigger word; it is added separately.
+- Do NOT guess at things that are not visible.
+- Output the caption only. No explanations, no preamble.
