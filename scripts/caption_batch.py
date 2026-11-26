@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-only
 """Batch captioning for LoRA training images using a vision-capable LLM.
 
 Design notes
