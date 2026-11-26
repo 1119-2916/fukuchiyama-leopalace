@@ -66,7 +66,7 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 
 - [x] 対象ベースモデル: Anima / Moss（MOSS-Image）/ Z-Image / Flux-Klein
       （詳細: [docs/base-models.md](docs/base-models.md)）
-- [ ] Flux-Klein の世代（FLUX.2 [klein] 4B/9B か、FLUX.3 Image Klein か）
+- [x] Flux-Klein の世代: FLUX.3 Image Klein Base（5.6B、Kommunity License）
 - [ ] トリガーワード
 - [ ] データセット画像自体をこのリポジトリで公開するか、重みのみ公開するか
 - [ ] ライセンス（コード、データセット、学習済み重みで分ける可能性あり）
