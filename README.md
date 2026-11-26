@@ -58,6 +58,12 @@ LoRA ファインチューニング重みを作成するプロジェクト。
   - LoRA 重みは Releases のアセット（1 ファイル 2 GB まで）として公開する想定
 - Git LFS を使う方針に変える場合は、この README と `.gitignore` を合わせて更新する
 
+## ライセンス
+
+- LoRA 重み: CC BY-NC 4.0（商用利用は全面不可）→ [LICENSE-LORA.md](LICENSE-LORA.md)
+- データセット画像: このリポジトリで公開する
+- コード: 未定
+
 ## ステータス
 
 - 2026-11-26: リポジトリ作成（公開）。初期構成のみ、データセット・学習は未着手
@@ -67,7 +73,8 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 - [x] 対象ベースモデル: Anima / Moss（MOSS-Image）/ Z-Image / Flux-Klein
       （詳細: [docs/base-models.md](docs/base-models.md)）
 - [x] Flux-Klein の世代: FLUX.3 Image Klein Base（5.6B、Kommunity License）
-- [ ] トリガーワード
-- [ ] データセット画像自体をこのリポジトリで公開するか、重みのみ公開するか
-- [ ] ライセンス（コード、データセット、学習済み重みで分ける可能性あり）
-      ※ ライセンスファイルは未決定のため、現時点では置いていない
+- [ ] トリガーワード（概念は [docs/dataset.md](docs/dataset.md) 参照）
+- [x] データセット画像自体の公開: 公開する（2026-11-26 決定）
+- [x] 学習済み重みのライセンス: CC BY-NC 4.0（商用利用は全面不可）
+      → [LICENSE-LORA.md](LICENSE-LORA.md)
+- [ ] コード（スクリプト類）のライセンス
