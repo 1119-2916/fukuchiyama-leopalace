@@ -27,6 +27,10 @@ training-data/
 # rebuild any time with normalize_images.py)
 dataset-normalized/
 
+# Per-model preprocessed image runs (bucketed/cropped copies; rebuild
+# any time with preprocess_images.py)
+dataset-preprocessed/
+
 # Training outputs and logs
 outputs/
 logs/

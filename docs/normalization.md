@@ -74,6 +74,10 @@ pip install Pillow   # このスクリプトだけ Pillow が必要
     --images dataset-normalized/<日時>/moss
 ```
 
+寸法までモデル別に確定させたい場合は、この後段に
+[preprocessing.md](preprocessing.md) の `preprocess_images.py`
+（モデル別バケット＋切り抜き）を挟む。
+
 なお学習設定側の注意: kohya では `enable_bucket=true` かつ
 `bucket_no_upscale=true` を必ず設定すること（既定のままだと小さい
 画像が拡大されて学習される）。
