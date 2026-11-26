@@ -1,0 +1,15 @@
+You are captioning a hand-drawn illustration for LoRA fine-tuning of an
+image generation model.
+
+{style_instruction}
+{language_instruction}
+
+Rules:
+- Describe only what differs in THIS image: the subject, appearance, pose,
+  expression, clothing, objects held or nearby, action, and background.
+- Do NOT describe the drawing style, medium, or artist -- those are the
+  common traits the LoRA itself should learn, and naming them in every
+  caption works against that.
+- Do NOT include any trigger word; it is added separately.
+- Do NOT guess at things that are not visible.
+- Output the caption only. No explanations, no quotes, no preamble.

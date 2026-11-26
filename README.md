@@ -23,7 +23,15 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 ├── README.md          # このファイル
 ├── docs/
 │   ├── dataset.md     # データセットの仕様・キャプション方針
+│   ├── captioning.md  # Vision LLM によるキャプション生成フロー
 │   └── training.md    # 学習環境・手順・記録の取り方
+├── scripts/
+│   ├── caption_batch.py  # キャプション一括生成（Python 標準ライブラリのみ）
+│   └── caption_batch.sh  # そのラッパー
+├── prompts/
+│   └── caption_default.txt  # キャプション生成プロンプト
+├── tests/
+│   └── test_caption_batch.py  # mock プロバイダによる単体テスト
 ├── dataset/
 │   └── README.md      # 画像とキャプションの置き方
 └── configs/
@@ -32,8 +40,9 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 
 ## ワークフロー
 
-1. データセットを `dataset/` に配置し、画像と同名の `.txt` でキャプションを付ける
-   （詳細: [docs/dataset.md](docs/dataset.md)）
+1. データセットを `dataset/` に配置し、画像と同名の `.txt` でキャプションを付ける。
+   キャプションは Vision LLM で一括生成する
+   （`./scripts/caption_batch.sh`、詳細: [docs/captioning.md](docs/captioning.md)）
 2. 対象ベースモデルごとに `configs/` へ学習設定を用意する
 3. RTX 6000 Blackwell Max-Q 上で LoRA 学習を実行する
 4. 学習条件と結果（サンプル生成、所感）を `docs/training.md` の記録形式で残す

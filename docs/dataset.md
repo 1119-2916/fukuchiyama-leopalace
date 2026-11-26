@@ -13,6 +13,17 @@
   - 例: `001.png` ↔ `001.txt`
 - ファイル名は連番など、並びが安定する命名に統一する
 
+## キャプションの付け方
+
+Vision LLM による一括生成を使う。手順とオプションは
+[captioning.md](captioning.md) を参照。
+
+```bash
+./scripts/caption_batch.sh --dry-run                    # 対象確認
+./scripts/caption_batch.sh --limit 5 --trigger-word ... # 少量で試行
+./scripts/caption_batch.sh --trigger-word ...           # 本番
+```
+
 ## キャプション方針（暫定）
 
 - 全画像に共通する画風・対象を表すトリガーワードを 1 つ決め、
