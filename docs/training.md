@@ -5,6 +5,10 @@
 - GPU: NVIDIA RTX 6000 Blackwell Max-Q
 - ドライバ / CUDA / 学習ツールのバージョンは、実際に学習する環境で
   確定した時点でここに記録する
+- キャプション生成も同じマシン上のローカル LLM で行う:
+  vLLM 上の Qwen 3.8 27B FP8 を LiteLLM プロキシ
+  （`http://localhost:4000`、OpenAI 互換 API）経由で使う。
+  詳細は [captioning.md](captioning.md)
 
 ## 対象
 

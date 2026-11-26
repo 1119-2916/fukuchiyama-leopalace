@@ -22,15 +22,32 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
   - `mock`: API を呼ばない動作確認用（プレースホルダを書く）
 - 既に `.txt` がある画像はスキップするので、中断しても再実行で再開できる
 
+## 本番構成（決定）
+
+- 実行マシン: NVIDIA RTX 6000 Blackwell Max-Q 搭載マシン
+- モデル: Qwen 3.8 27B FP8 を vLLM 上で実行（画像が読める構成であること）
+- API: LiteLLM プロキシが `http://localhost:4000` で
+  OpenAI API Compatible な口を開ける
+- このスクリプトは**そのマシン上で**実行し、`localhost:4000` に投げる
+  （`localhost` は実行マシンの自分自身を指す点に注意）
+
+実行例（`.env` に `CAPTION_MODEL` 等を設定済みの前提）:
+
+```bash
+./scripts/caption_batch.sh --dry-run
+./scripts/caption_batch.sh --limit 5    # 少量で質を確認
+./scripts/caption_batch.sh              # 本番
+```
+
+`.env` の雛形は `.env.example`（本番構成の値が入っている）。
+`CAPTION_MODEL` には LiteLLM の config で付けたモデル alias を書くこと。
+
 ## 使い方
 
 ### 0. 準備
 
-API キーを環境変数に設定する（`.env.example` を参照。キーはコミットしない）。
-
-```bash
-export OPENAI_API_KEY=...        # anthropic の場合は ANTHROPIC_API_KEY
-```
+`.env.example` を `.env` にコピーして値を埋める（スクリプトが自動で読む。
+シェルで export 済みの変数が優先される）。キーはコミットしない。
 
 ### 1. まず dry-run で対象を確認
 

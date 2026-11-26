@@ -290,6 +290,24 @@ def process_one(
         return Result(str(image_path), "failed", str(caption_path), str(exc))
 
 
+def load_dotenv(path: Path) -> None:
+    """Load KEY=VALUE lines from ``path`` into the environment.
+
+    Existing environment variables win, so explicit exports and CLI-related
+    env settings are never overridden by a stale .env file.
+    """
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip().strip("\"'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Batch-generate LoRA training captions with a vision LLM."
@@ -333,6 +351,9 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--no-recursive", action="store_true")
     parser.add_argument("--log-file", default=None,
                         help="Append per-image results as JSON Lines to this file")
+    parser.add_argument("--env-file", default=".env",
+                        help="Read settings from this .env file if it exists "
+                             "(default: .env; existing environment variables win)")
     return parser.parse_args(argv)
 
 
@@ -365,6 +386,16 @@ def load_prompt_template(prompt_file: str | None) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    argv = list(sys.argv[1:] if argv is None else argv)
+    # Load .env before parsing: several argument defaults come from the
+    # environment, so the file must be read first. Honor an explicit
+    # --env-file if one is present in argv.
+    env_file = ".env"
+    if "--env-file" in argv:
+        idx = argv.index("--env-file")
+        if idx + 1 < len(argv):
+            env_file = argv[idx + 1]
+    load_dotenv(Path(env_file))
     args = parse_args(argv)
     input_dir = Path(args.input_dir)
     if not input_dir.is_dir():

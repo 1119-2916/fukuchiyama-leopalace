@@ -62,6 +62,26 @@ class PostProcessingTests(unittest.TestCase):
         self.assertEqual(cb.apply_trigger_word("1girl", None), "1girl")
 
 
+class DotEnvTests(unittest.TestCase):
+    def test_load_dotenv_sets_missing_but_never_overrides(self):
+        import os
+
+        with tempfile.TemporaryDirectory() as tmp:
+            env_path = Path(tmp) / ".env"
+            env_path.write_text(
+                "# comment\nCAPTION_TEST_NEW=from_file\nCAPTION_TEST_KEEP=from_file\n"
+            )
+            os.environ.pop("CAPTION_TEST_NEW", None)
+            os.environ["CAPTION_TEST_KEEP"] = "from_shell"
+            try:
+                cb.load_dotenv(env_path)
+                self.assertEqual(os.environ["CAPTION_TEST_NEW"], "from_file")
+                self.assertEqual(os.environ["CAPTION_TEST_KEEP"], "from_shell")
+            finally:
+                os.environ.pop("CAPTION_TEST_NEW", None)
+                os.environ.pop("CAPTION_TEST_KEEP", None)
+
+
 class MockBatchTests(unittest.TestCase):
     def test_end_to_end_and_resume(self):
         with tempfile.TemporaryDirectory() as tmp:
