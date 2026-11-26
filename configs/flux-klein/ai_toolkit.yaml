@@ -1,0 +1,54 @@
+# AI Toolkit (ostris) job config: FLUX.3 Image Klein Base LoRA.
+# Run via scripts/train/train_flux_klein.sh on the training machine.
+# Hyperparameters follow Black Forest Labs' official Klein LoRA example
+# (rank 32, lr 1e-4, 4000 steps, ~1MP, 20 images; docs/normalization.md).
+# The base model is gated (FLUX Kommunity License): accept the license
+# on Hugging Face and set HF_TOKEN on the training machine first.
+job: extension
+config:
+  name: "okakikai-flux-klein"
+  process:
+    - type: "sd_trainer"
+      training_folder: "outputs/flux-klein"
+      device: cuda:0
+      trigger_word: "okakikai"
+      network:
+        type: "lora"
+        linear: 32
+        linear_alpha: 32
+      save:
+        dtype: bf16
+        save_every: 500
+        max_step_saves_to_keep: 4
+      datasets:
+        - folder_path: "training-data/flux-klein"
+          caption_ext: "txt"
+          caption_dropout_rate: 0.0
+          cache_latents_to_disk: true
+          resolution: [512, 768, 1024]
+      train:
+        batch_size: 1
+        gradient_accumulation: 1
+        steps: 4000
+        lr: 0.0001
+        ema_config:
+          use_ema: false
+        dtype: bf16
+        train_unet: true
+        train_text_encoder: false
+      model:
+        arch: "flux3"
+        name_or_path: "black-forest-labs/flux-3-image-klein-base"
+        quantize: false
+      sample:
+        sampler: "flowmatch"
+        sample_every: 500
+        width: 1024
+        height: 1024
+        prompts:
+          - "okakikai. A girl with long silver hair wearing a white dress, standing in a garden, hand-drawn illustration"
+        neg: ""
+        seed: 42
+        walk_seed: false
+        guidance_scale: 3.5
+        sample_steps: 50

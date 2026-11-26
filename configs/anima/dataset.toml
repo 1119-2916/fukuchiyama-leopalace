@@ -1,0 +1,22 @@
+# kohya sd-scripts dataset config for Anima LoRA training.
+# Used by scripts/train/train_anima.sh (anima_train_network.py --dataset_config).
+# Images + captions come from training-data/anima (built by assemble_training.py
+# from a chosen caption run; see docs/training.md).
+
+[general]
+shuffle_caption = true
+caption_extension = ".txt"
+keep_tokens = 1 # the trigger word "okakikai" sits at the head; never shuffle it away
+
+[[datasets]]
+resolution = [1024, 1024]
+enable_bucket = true
+bucket_no_upscale = true # never upscale small images (research: docs/normalization.md)
+min_bucket_reso = 256
+max_bucket_reso = 2048
+bucket_reso_steps = 32 # matches the preprocess_images.py anima grid
+batch_size = 2
+
+[[datasets.subsets]]
+image_dir = "training-data/anima"
+num_repeats = 10

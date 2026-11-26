@@ -1,0 +1,54 @@
+# AI Toolkit (ostris) job config: Z-Image Base LoRA.
+# Run via scripts/train/train_z_image.sh on the training machine.
+# Train on the undistilled Base only -- never on Z-Image-Turbo
+# (docs/base-models.md). Values are starting points for 30-50 images.
+job: extension
+config:
+  name: "okakikai-z-image"
+  process:
+    - type: "sd_trainer"
+      training_folder: "outputs/z-image"
+      device: cuda:0
+      trigger_word: "okakikai"
+      network:
+        type: "lora"
+        linear: 32
+        linear_alpha: 16
+      save:
+        dtype: bf16
+        save_every: 500
+        max_step_saves_to_keep: 4
+      datasets:
+        - folder_path: "training-data/z-image"
+          caption_ext: "txt"
+          caption_dropout_rate: 0.0
+          cache_latents_to_disk: true
+          resolution: [512, 768, 1024]
+      train:
+        batch_size: 1
+        gradient_accumulation: 1
+        steps: 3000
+        lr: 0.0001
+        ema_config:
+          use_ema: false
+        dtype: bf16
+        train_unet: true
+        train_text_encoder: false
+      model:
+        arch: "zimage"
+        # Base (undistilled) checkpoint. Verify the exact repo id on the
+        # training machine before the first run.
+        name_or_path: "Tongyi-MAI/Z-Image"
+        quantize: false
+      sample:
+        sampler: "flowmatch"
+        sample_every: 500
+        width: 1024
+        height: 1024
+        prompts:
+          - "okakikai. A girl with long silver hair wearing a white dress, standing in a garden, hand-drawn illustration"
+        neg: ""
+        seed: 42
+        walk_seed: false
+        guidance_scale: 3.5
+        sample_steps: 30

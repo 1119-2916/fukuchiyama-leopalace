@@ -5,3 +5,4 @@ LoRA 学習設定。ライセンス: FLUX Kommunity License。
 ツール想定: AI Toolkit (arch: flux3) / Diffusers。
 キャプション形式: detailed (自然文)。詳細: ../../docs/base-models.md
 画像前処理: preprocess_images.py プリセット flux-klein（面積 1024^2、グリッド 16）。詳細: ../../docs/preprocessing.md
+学習設定: ai_toolkit.yaml（AI Toolkit, arch: flux3）。起動: ../../scripts/train/train_flux_klein.sh

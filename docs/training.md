@@ -35,6 +35,35 @@
 キャプションのバリエーション（元ラン）を変えたことも含めて
 下記の学習記録に残すこと。
 
+## モデル別ランブック（学習の実行方法）
+
+学習コードと設定はリポジトリに用意済み。実行は RTX 6000 の
+学習マシン側で行う（このリポジトリの開発環境には GPU がない）。
+全モデル共通の前提: `training-data/<モデル名>/` を
+`assemble_training.sh` で組み立てておくこと。出力は `outputs/<モデル名>/`。
+
+| モデル | ツール | 設定 | 起動 |
+|---|---|---|---|
+| Anima | kohya sd-scripts `anima_train_network.py` | `configs/anima/dataset.toml` | `SD_SCRIPTS_DIR=... ANIMA_BASE_PATH=... ./scripts/train/train_anima.sh` |
+| Moss | 自前スクリプト（Diffusers + PEFT、flow matching） | `scripts/train/train_moss_lora.py` 内の既定値 | `./scripts/train/train_moss.sh` |
+| Z-Image | AI Toolkit（arch: zimage） | `configs/z-image/ai_toolkit.yaml` | `AI_TOOLKIT_DIR=... ./scripts/train/train_z_image.sh` |
+| FLUX.3 Klein | AI Toolkit（arch: flux3） | `configs/flux-klein/ai_toolkit.yaml` | `AI_TOOLKIT_DIR=... ./scripts/train/train_flux_klein.sh`（要 HF_TOKEN） |
+
+- 全起動スクリプトに `--dry-run` があり、実行コマンドだけを表示できる
+- ハイパーパラメータは 30〜50 枚向けの初期値（rank 32、lr 1e-4 系）。
+  FLUX.3 は BFL 公式例（4000 steps）に合わせた
+- **MOSS のみ未検証の自前実装**: 既製の LoRA トレーナーが無いため
+  Diffusers + PEFT で実装した。実機で最初に確認すべき点
+  （パイプラインの属性名、潜在表現のパッキング方法、
+  encode_prompt の有無、VAE のスケーリング、タイムステップ規約）は
+  スクリプト冒頭に列挙してある。ここが通るまでは他3モデルの結果を
+  先に確定させるのが安全
+- Anima の kohya フラグ名も、実機の sd-scripts のバージョンで
+  一度照合すること（`--dry-run` の出力と `--help` を突き合わせる）
+- 設定ファイルの整合性（arch、トリガーワード、no-upscale、
+  Base チェックポイント等）は `tests/test_train_configs.py` が
+  機械的に守っている
+
 ## 学習記録の形式
 
 学習を 1 回行うごとに、再現できるよう最低限以下を記録する。
