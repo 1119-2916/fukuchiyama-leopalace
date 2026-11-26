@@ -23,6 +23,10 @@ dataset-captions/
 # chosen caption run; rebuild any time with assemble_training.py)
 training-data/
 
+# Normalized image runs (hygiene-processed copies of dataset/ images;
+# rebuild any time with normalize_images.py)
+dataset-normalized/
+
 # Training outputs and logs
 outputs/
 logs/
