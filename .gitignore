@@ -19,6 +19,10 @@ venv/
 # the training dataset folder instead)
 dataset-captions/
 
+# Assembled trainer-ready datasets (copies of dataset/ images plus one
+# chosen caption run; rebuild any time with assemble_training.py)
+training-data/
+
 # Training outputs and logs
 outputs/
 logs/

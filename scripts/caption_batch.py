@@ -588,6 +588,33 @@ def main(argv: list[str] | None = None) -> int:
         with open(args.log_file, "a", encoding="utf-8") as fh:
             fh.write("\n".join(log_lines) + ("\n" if log_lines else ""))
 
+    # Record what this run was, so every kept caption variant stays
+    # identifiable and reproducible later (which settings produced it).
+    if output_dir is not None and not args.dry_run:
+        import hashlib
+        from datetime import datetime
+
+        manifest = {
+            "run_id": run_id,
+            "created_at": datetime.now().astimezone().isoformat(timespec="seconds"),
+            "target_model": args.target_model,
+            "style": style,
+            "language": language,
+            "provider": cfg.provider,
+            "llm_model": cfg.model,
+            "trigger_word": args.trigger_word,
+            "prompt_file": args.prompt_file or preset_prompt or "caption_default.txt",
+            "prompt_sha256": hashlib.sha256(prompt.encode("utf-8")).hexdigest(),
+            "input_dir": str(input_dir),
+            "images_found": len(images),
+            "counts": counts,
+        }
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "caption_run.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
     print("summary:", ", ".join(f"{k}={v}" for k, v in sorted(counts.items())))
     return 1 if counts.get("failed") else 0
 
