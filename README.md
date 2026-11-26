@@ -22,7 +22,7 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 .
 ├── README.md          # このファイル
 ├── docs/
-│   ├── quickstart.md    # クローンから学習までの全手順（最初に読む）
+│   ├── quickstart.md    # 手順書: クローンから学習まで（AIエージェント実行用）
 │   ├── dataset.md       # データセットの仕様・キャプション方針
 │   ├── captioning.md    # Vision LLM によるキャプション生成フロー
 │   ├── normalization.md # 画像の正規化（調査結果と方針）

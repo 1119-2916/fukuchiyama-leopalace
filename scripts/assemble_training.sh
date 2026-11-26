@@ -1,5 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: AGPL-3.0-only
-# Wrapper: assemble a trainer-ready dataset from a chosen caption run.
-# All arguments are passed through to assemble_training.py.
-exec python3 "$(dirname "$0")/assemble_training.py" "$@"
+# Wrapper: runs from the repo root so relative paths (dataset/, outputs)
+# always resolve the same way, matching caption_batch.sh.
+cd "$(dirname "$0")/.."
+exec python3 scripts/assemble_training.py "$@"

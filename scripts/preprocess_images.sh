@@ -1,5 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: AGPL-3.0-only
-# Wrapper: per-model image preprocessing for LoRA training.
-# All arguments are passed through to preprocess_images.py (needs Pillow).
-exec python3 "$(dirname "$0")/preprocess_images.py" "$@"
+# Wrapper: runs from the repo root so relative paths (dataset/, outputs)
+# always resolve the same way, matching caption_batch.sh.
+cd "$(dirname "$0")/.."
+exec python3 scripts/preprocess_images.py "$@"
