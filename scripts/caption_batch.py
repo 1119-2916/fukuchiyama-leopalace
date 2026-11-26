@@ -82,8 +82,19 @@ def find_images(input_dir: Path, recursive: bool = True) -> list[Path]:
     )
 
 
-def caption_path_for(image_path: Path) -> Path:
-    return image_path.with_suffix(".txt")
+def caption_path_for(
+    image_path: Path, input_dir: Path | None = None, output_dir: Path | None = None
+) -> Path:
+    """Caption file for an image.
+
+    Default: next to the image with the same stem. With ``output_dir``,
+    mirror the image's path relative to ``input_dir`` under ``output_dir``
+    (used to keep per-base-model caption sets separate from the images).
+    """
+    if output_dir is None or input_dir is None:
+        return image_path.with_suffix(".txt")
+    relative = image_path.relative_to(input_dir).with_suffix(".txt")
+    return output_dir / relative
 
 
 def clean_caption(raw: str) -> str:
@@ -270,8 +281,10 @@ def process_one(
     trigger_word: str | None,
     overwrite: bool,
     dry_run: bool,
+    input_dir: Path | None = None,
+    output_dir: Path | None = None,
 ) -> Result:
-    caption_path = caption_path_for(image_path)
+    caption_path = caption_path_for(image_path, input_dir, output_dir)
     if caption_path.exists() and not overwrite:
         return Result(str(image_path), "skipped", str(caption_path))
     if dry_run:
@@ -282,6 +295,7 @@ def process_one(
         if not caption:
             raise RuntimeError("model returned an empty caption")
         # Write atomically so a crash never leaves a half-written caption.
+        caption_path.parent.mkdir(parents=True, exist_ok=True)
         tmp_path = caption_path.with_suffix(".txt.tmp")
         tmp_path.write_text(caption + "\n", encoding="utf-8")
         tmp_path.replace(caption_path)
@@ -351,6 +365,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--no-recursive", action="store_true")
     parser.add_argument("--log-file", default=None,
                         help="Append per-image results as JSON Lines to this file")
+    parser.add_argument("--output-dir", default=None,
+                        help="Write captions under this directory instead of next to "
+                             "the images, mirroring the relative folder structure. "
+                             "Useful for per-base-model caption sets.")
     parser.add_argument("--env-file", default=".env",
                         help="Read settings from this .env file if it exists "
                              "(default: .env; existing environment variables win)")
@@ -418,10 +436,11 @@ def main(argv: list[str] | None = None) -> int:
 
     prompt = build_prompt(load_prompt_template(args.prompt_file), args.style, args.language)
     images = find_images(input_dir, recursive=not args.no_recursive)
+    output_dir = Path(args.output_dir) if args.output_dir else None
 
     todo = [
         p for p in images
-        if args.overwrite or not caption_path_for(p).exists()
+        if args.overwrite or not caption_path_for(p, input_dir, output_dir).exists()
     ]
     if args.limit is not None:
         todo = todo[: args.limit]
@@ -431,7 +450,8 @@ def main(argv: list[str] | None = None) -> int:
 
     def run_one(path: Path) -> Result:
         result = process_one(path, cfg, prompt, args.trigger_word,
-                             args.overwrite, args.dry_run)
+                             args.overwrite, args.dry_run,
+                             input_dir=input_dir, output_dir=output_dir)
         if args.delay and args.workers == 1 and result.status == "captioned":
             time.sleep(args.delay)
         return result

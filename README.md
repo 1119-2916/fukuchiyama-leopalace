@@ -24,6 +24,7 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 ├── docs/
 │   ├── dataset.md     # データセットの仕様・キャプション方針
 │   ├── captioning.md  # Vision LLM によるキャプション生成フロー
+│   ├── base-models.md # 対象ベースモデル 4 種の注意点と比較
 │   └── training.md    # 学習環境・手順・記録の取り方
 ├── scripts/
 │   ├── caption_batch.py  # キャプション一括生成（Python 標準ライブラリのみ）
@@ -35,7 +36,8 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 ├── dataset/
 │   └── README.md      # 画像とキャプションの置き方
 └── configs/
-    └── README.md      # 学習設定ファイルの置き場（モデルごとに分ける）
+    ├── README.md      # 学習設定ファイルの置き場（モデルごとに分ける）
+    ├── anima/  ├── moss/  ├── z-image/  └── flux-klein/
 ```
 
 ## ワークフロー
@@ -62,7 +64,9 @@ LoRA ファインチューニング重みを作成するプロジェクト。
 
 ## 未決定事項（決まり次第ここを更新）
 
-- [ ] 対象ベースモデルの一覧（例: SDXL 系、FLUX 系、その他）
+- [x] 対象ベースモデル: Anima / Moss（MOSS-Image）/ Z-Image / Flux-Klein
+      （詳細: [docs/base-models.md](docs/base-models.md)）
+- [ ] Flux-Klein の世代（FLUX.2 [klein] 4B/9B か、FLUX.3 Image Klein か）
 - [ ] トリガーワード
 - [ ] データセット画像自体をこのリポジトリで公開するか、重みのみ公開するか
 - [ ] ライセンス（コード、データセット、学習済み重みで分ける可能性あり）

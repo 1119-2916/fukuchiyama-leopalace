@@ -44,6 +44,14 @@ class DiscoveryTests(unittest.TestCase):
             cb.caption_path_for(Path("dataset/001.png")), Path("dataset/001.txt")
         )
 
+    def test_caption_path_with_output_dir_mirrors_structure(self):
+        self.assertEqual(
+            cb.caption_path_for(
+                Path("dataset/sub/001.png"), Path("dataset"), Path("caps/tags")
+            ),
+            Path("caps/tags/sub/001.txt"),
+        )
+
 
 class PostProcessingTests(unittest.TestCase):
     def test_clean_caption_collapses_and_unquotes(self):
@@ -97,6 +105,17 @@ class MockBatchTests(unittest.TestCase):
             before = (root / "001.txt").read_text()
             self.assertEqual(cb.main(argv), 0)
             self.assertEqual((root / "001.txt").read_text(), before)
+
+    def test_output_dir_keeps_images_clean(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            images = root / "images"
+            out = root / "caps"
+            make_image(images, "001.png")
+            argv = [str(images), "--provider", "mock", "--output-dir", str(out)]
+            self.assertEqual(cb.main(argv), 0)
+            self.assertTrue((out / "001.txt").exists())
+            self.assertFalse((images / "001.txt").exists())
 
     def test_dry_run_writes_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -90,6 +90,16 @@ dataset/*.png 等 ──→ scripts/caption_batch.py ──→ dataset/*.txt（�
 | `--delay SEC` | 0 | workers=1 のときのリクエスト間隔 |
 | `--prompt-file` | `prompts/caption_default.txt` | プロンプトテンプレートの差し替え |
 | `--log-file` | なし | 1 画像 1 行の JSON Lines で結果を追記 |
+| `--output-dir` | なし | キャプションの出力先を画像フォルダから分ける（相対構造を維持）。モデル別キャプション一式の作成用 |
+
+モデル別キャプションの作り分け（詳細: [base-models.md](base-models.md)）:
+
+```bash
+# Anima 向け: タグ形式
+./scripts/caption_batch.sh --style tags     --output-dir dataset-captions/anima
+# Moss / Z-Image / Flux-Klein 向け: 自然文・詳細
+./scripts/caption_batch.sh --style detailed --output-dir dataset-captions/natural
+```
 
 ## プロンプトの設計方針
 
