@@ -47,6 +47,29 @@
 | Z-Image | 28 steps / CFG 4.0 | 生成も Base（未蒸留）で行う。Turbo に載せない |
 | FLUX.3 Klein | Base: 50 steps / CFG 3.5、Distilled: 16 steps / CFG 1 | Distilled の repo id は実機確認。ゲート付きのため `HF_TOKEN` が必要 |
 
+## Discord への投稿（持ち出し用）
+
+生成画像を Discord の特定チャンネルに投稿する補助スクリプトがある。
+実験環境から画像を持ち出す手間を省くためのもので、生成そのものとは
+独立している。
+
+```bash
+./scripts/post_generated.sh --dir generated/<実行日時>/<モデル> \
+    --webhook "$DISCORD_WEBHOOK_URL"
+# 先に確認: --dry-run で送信内容（概要文とバッチ構成）だけ表示
+```
+
+- 引数: `--dir`（画像のあるディレクトリ）と `--webhook`
+  （または環境変数 `DISCORD_WEBHOOK_URL`、`.env` の同名キー）
+- ディレクトリに `generation_manifest.json` があれば、モデル・
+  ベース・LoRA・steps/CFG・枚数の概要文を先に投稿し、続けて
+  画像を10枚ずつ（Discord の添付上限）まとめて投稿する
+- 25MB 超のファイルは警告してスキップ。429 は `retry_after` に
+  従って再試行する
+- **Webhook URL は認証情報**。引数・環境変数・`.env` のいずれでも
+  渡せるが、コミットしないこと。スクリプトは URL を表示・記録
+  しない
+
 ## 手順書との関係
 
 [quickstart.md](quickstart.md) 手順5.5 として、学習直後に
